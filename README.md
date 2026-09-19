@@ -1,2 +1,4 @@
 # メモ
-・ DAO側の実装を変えずに行くため、こちら側の実装は冗長になる
+[must]
+Inspectionテーブル
+started_at, finished_atをとれるように変更
