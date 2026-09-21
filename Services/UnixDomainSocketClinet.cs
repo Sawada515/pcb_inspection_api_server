@@ -22,6 +22,7 @@ public class UnixDomainSocketClient : IDisposable
     private bool _disposed = false;
     private const int MaxPayloadSize = 2 * 1024; // 2kB
     private const int MAX_RETRY_COUNT = 5;
+    private const int RECV_HEADER_SIZE = 8;
 
     /**
      * @brief コンストラクタ
@@ -184,7 +185,7 @@ public class UnixDomainSocketClient : IDisposable
     /**
      * @brief 4バイトの電文長ヘッダーを読み取り、ペイロードを受信する
      */
-    public async Task<byte[]?> RecvFrameAsync(CancellationToken cancellationToken = default)
+    public async Task<(byte[]? recvData, int itemCount)> RecvFrameAsync(CancellationToken cancellationToken = default)
     {
         if (_stream == null)
         {
@@ -195,14 +196,15 @@ public class UnixDomainSocketClient : IDisposable
     
         try
         {
-            byte[] header = new byte[sizeof(int)];
+            byte[] header = new byte[RECV_HEADER_SIZE];
     
             if (!await ReadExactAsync(header, cancellationToken))
             {
-                return null;
+                return (null, 0);
             }
     
-            int payloadLength = BinaryPrimitives.ReadInt32BigEndian(header);
+            int payloadLength = BinaryPrimitives.ReadInt32BigEndian(header.AsSpan(0, sizeof(int)));
+            int itemCount = BinaryPrimitives.ReadInt32BigEndian(header.AsSpan(sizeof(int), sizeof(int)));
     
             if (payloadLength < 0 || payloadLength > MaxPayloadSize)
             {
@@ -210,22 +212,22 @@ public class UnixDomainSocketClient : IDisposable
     
                 CleanUp();
 
-                return null;
+                return (null, 0);
             }
     
             if (payloadLength == 0)
             {
-                return Array.Empty<byte>();
+                return (Array.Empty<byte>(), itemCount);
             }
     
             byte[] payload = new byte[payloadLength];
     
             if (!await ReadExactAsync(payload, cancellationToken))
             {
-                return null;
+                return (null, 0);
             }
     
-            return payload;
+            return (payload, itemCount);
         }
         finally
         {

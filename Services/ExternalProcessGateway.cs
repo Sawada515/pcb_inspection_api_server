@@ -74,7 +74,7 @@ public class ExternalProcessGateway
 
                 byte[] requestJson = JsonSerializer.SerializeToUtf8Bytes(readSlotStatusRequest);
 
-                var response = await AccessDaoSystemAsync<StoreData>(requestJson);
+                var response = await AccessDaoSystemAsync<List<StoreData>>(requestJson);
                 if (response == null)
                 {
                     await _syslogClient.SyslogAsync(
@@ -86,7 +86,7 @@ public class ExternalProcessGateway
                 }
                 if (response.IsSuccess)
                 {
-                    var slotData = response.Payload;
+                    var slotData = response.Payload.FirstOrDefault();
                     if (slotData != null && slotData.StoreStatus.HasValue)
                     {
                         int bitPosition = (i * SlotRowMax) + j;
@@ -247,7 +247,9 @@ public class ExternalProcessGateway
 
         await _unixDomainSocketClient.SendFrameAsync(requestJson);
 
-        byte[]? responseBytes = await _unixDomainSocketClient.RecvFrameAsync();
+        byte[]? responseBytes;
+        int itemCount;
+        (responseBytes, itemCount) = await _unixDomainSocketClient.RecvFrameAsync();
         if (responseBytes == null)
         {
             return null;
