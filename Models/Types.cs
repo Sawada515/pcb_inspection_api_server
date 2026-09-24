@@ -1,7 +1,19 @@
 namespace api_server.Models
 {
+    public record IndividualSlotStatusData(string UserName, bool IsStored);
+    public record SlotStatusData(
+        IndividualSlotStatusData Slot0,
+        IndividualSlotStatusData Slot1,
+        IndividualSlotStatusData Slot2,
+        IndividualSlotStatusData Slot3,
+        IndividualSlotStatusData Slot4,
+        IndividualSlotStatusData Slot5,
+        IndividualSlotStatusData Slot6,
+        IndividualSlotStatusData Slot7,
+        IndividualSlotStatusData Slot8
+    );
     public record CreateUserData(string Username, string Password);
-    public record DeleteUserData(string username);
+    public record DeleteUserData(string Username);
 
     public class SyslogClientOptions
     {

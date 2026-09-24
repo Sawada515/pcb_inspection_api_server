@@ -45,12 +45,14 @@ public class ExternalProcessGateway
         _unixDomainSocketClient = unixDomainSocketClient;
     }
 
-    public async Task<ushort> GetSlotStatus()
+    public async Task<SlotStatusData> GetSlotStatus()
     {
-        ushort slotStatus = 0x0000;
-
         const int SlotRowMax = 3;
         const int SlotColMax = 3;
+        const int SlotMaxCount = SlotRowMax * SlotColMax;
+
+        SlotStatusData slotStatus;
+        IndividualSlotStatusData[] individualSlotStatus = new IndividualSlotStatusData[SlotMaxCount];
 
         await _unixDomainSocketClient.ConnectAsync();
 
@@ -86,20 +88,54 @@ public class ExternalProcessGateway
                 }
                 if (response.IsSuccess)
                 {
-                    var slotData = response.Payload.FirstOrDefault();
-                    if (slotData != null && slotData.StoreStatus.HasValue)
+                    if (response.Payload == null)
                     {
-                        int bitPosition = (i * SlotRowMax) + j;
+                        // require write log
+                        continue; 
+                    }
+                    var slotData = response.Payload.FirstOrDefault();
+                    if (slotData == null)
+                    {
+                        // require write log 
+                    
+                        continue;
+                    }
 
+                    bool isStored = false;
+                    string? userName = string.Empty;
+
+                    if (slotData.StoreStatus.HasValue)
+                    {
                         if (slotData.StoreStatus.Value != StoreStatusRecord.Empty)
                         {
-                            slotStatus |= (ushort)(1 << bitPosition);
+                            isStored = true;        
                         }
                     }
-                }
+                    if (slotData.UserId == null)
+                    {
+                        userName = string.Empty;
+                    }
+                    else
+                    {
+                        userName = slotData.UserId;
+                    }
 
+                    individualSlotStatus[(i * SlotRowMax) + j] = new IndividualSlotStatusData(userName, isStored);
+                }
             }
         }
+
+        slotStatus = new SlotStatusData(
+            individualSlotStatus[0],
+            individualSlotStatus[1],
+            individualSlotStatus[2],
+            individualSlotStatus[3],
+            individualSlotStatus[4],
+            individualSlotStatus[5],
+            individualSlotStatus[6],
+            individualSlotStatus[7],
+            individualSlotStatus[8]
+        );
 
         return slotStatus;
     }
@@ -215,7 +251,7 @@ public class ExternalProcessGateway
                     $"Deleting user with username: {username}"
                 );
 
-                string? uuid = await keycloakAccess.GetUUIDFromUsernameAsync(username.username);
+                string? uuid = await keycloakAccess.GetUUIDFromUsernameAsync(username.Username);
                 if (string.IsNullOrEmpty(uuid))
                 {
                     await _syslogClient.SyslogAsync(
