@@ -37,7 +37,7 @@ app.MapGet("/system_status", async (ExternalProcessGateway gateway) => new
  */
 app.MapGet("/system_log", async (ExternalProcessGateway gateway) =>
 {
-    string raw_log = await gateway.GetApplicationLog(100);
+    string raw_log = await gateway.GetApplicationLog(200);
 
     return Results.Ok(new
     {
@@ -54,14 +54,6 @@ app.MapGet("/slot_status", async (ExternalProcessGateway gateway) => new
 });
 
 //app.MapPost("/slot_status", ())
-
-/*
- * @brief   API server endpoint slot_subscribe_info
- */
-app.MapGet("/slot_subscribe_info", (ExternalProcessGateway gateway) => new
-{
-    info = gateway.GetSlotStatus()
-});
 
 /*
  * @brief   API server endpoint inspection_eta
@@ -89,6 +81,29 @@ app.MapGet("/inspection_history", async (ExternalProcessGateway gateway) => new 
  */
 app.MapGet("/inspection_status", async (ExternalProcessGateway gateway) => new {
     status = "completed"
+});
+
+/*
+ * @brief   API server endpoint inspection_request
+ */
+app.MapPost("/inspection_request", async (InspectionRequestStringData request, ExternalProcessGateway gateway) => {
+    Console.WriteLine("Received inspection request");
+
+    bool success = await gateway.RequestInspection(request);
+    if (!success)
+    {
+        return Results.BadRequest(new { message = "Failed to request inspection" });
+    }
+
+    return Results.Ok(new { message = "Inspection requested successfully" });
+});
+
+
+/*
+ * @brief   API server endpoint user_list
+ */
+app.MapGet("/user_list", async (ExternalProcessGateway gateway) => new {
+    user_list = await gateway.GetUserList()
 });
 
 /*

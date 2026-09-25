@@ -10,11 +10,19 @@ using System.Text.Json.Serialization;
 namespace api_server.Models.DatabaseType.TableRecord;
 
 public record InspectionData (
-    [property: JsonPropertyName("inspection_id")]
+    [property: JsonPropertyName("request_id")]
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    int? InspectionId = null,
+    string? RequestId = null,
 
-    [property: JsonPropertyName("request_status")]
+    [property: JsonPropertyName("bottom_image_path")]
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? RequestStatus = null
+    string? BottomImagePath = null,
+
+    [property: JsonPropertyName("feedback")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? Feedback = null,
+
+    [property: JsonPropertyName("user_id")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? UserId = null
 );

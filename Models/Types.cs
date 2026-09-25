@@ -1,3 +1,5 @@
+using api_server.Models.DatabaseType.TableRecord;
+
 namespace api_server.Models
 {
     public record IndividualSlotStatusData(string UserName, bool IsStored);
@@ -14,6 +16,20 @@ namespace api_server.Models
     );
     public record CreateUserData(string Username, string Password);
     public record DeleteUserData(string Username);
+
+    public record UserListData(List<string> Usernames);
+
+    public record InspectionRequestStringData(string RequestString)
+    {
+        public InspectionRequestStatusRecord ToStatus() => RequestString?.ToLowerInvariant() switch
+        {
+            "waiting"   => InspectionRequestStatusRecord.Waiting,
+            "running"   => InspectionRequestStatusRecord.Running,
+            "completed" => InspectionRequestStatusRecord.Completed,
+            "canceled"  => InspectionRequestStatusRecord.Canceled,
+            _ => throw new ArgumentException($"不正なステータス文字列です: '{RequestString}'")
+        };
+    };
 
     public class SyslogClientOptions
     {

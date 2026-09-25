@@ -30,7 +30,7 @@ public enum ResourceRecord
     [JsonStringEnumMemberName("inspection_service")]
     InspectionService,
     [JsonStringEnumMemberName("request_service")]
-    RequestService,
+    InspectionRequestService,
     [JsonStringEnumMemberName("store_service")]
     StoreService,
     [JsonStringEnumMemberName("defect_service")]

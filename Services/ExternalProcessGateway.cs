@@ -187,11 +187,62 @@ public class ExternalProcessGateway
         return output;
     }
 
-    public async Task<List<string>> GetSlotSubscribeInfo()
+    public async Task<bool> RequestInspection(InspectionRequestStringData request)
     {
-        // DBに問い合わせ
+        await _syslogClient.SyslogAsync(
+            LogLevel.Informational,
+            "Requesting inspection"
+        );
 
-        return new List<string>();
+        var status = request.ToStatus();
+
+        var requestInspectionBodyData = new InspectionRequestData (
+            RequestStatus: status
+        );
+
+        var requestInspectionRequest = new DatabaseRequest<InspectionRequestData> (
+            requestId: _requestId++,
+            queryType: QueryTypeRecord.Create,
+            resource: ResourceRecord.InspectionRequestService,
+            data: requestInspectionBodyData
+        );
+
+        byte[] requestJson = JsonSerializer.SerializeToUtf8Bytes(requestInspectionRequest);
+
+        var response = await AccessDaoSystemAsync<InspectionRequestData>(requestJson);
+        if (response == null)
+        {
+            await _syslogClient.SyslogAsync(
+                LogLevel.Error,
+                "Failed to request inspection"
+            ); 
+
+            return false;
+        }
+
+        if (response.IsSuccess)
+        {
+            return true;
+        }
+        else
+        {
+            if (response.Error == null)
+            {
+                await _syslogClient.SyslogAsync(
+                    LogLevel.Error,
+                    "Failed to request inspection: Unknown error"
+                );
+
+                return false;
+            }
+
+            await _syslogClient.SyslogAsync(
+                LogLevel.Error,
+                $"Failed to request inspection: {response.Error.Message}"
+            );
+
+            return false;
+        }
     }
 
     public async Task<string?> CreateUser(CreateUserData request_data)
@@ -275,6 +326,71 @@ public class ExternalProcessGateway
         }
 
         return true;
+    }
+
+    public async Task<List<UserListData>> GetUserList()
+    {
+        var userListRequestBody = new UserData (
+            UserStatus: UserStatusRecord.Active
+        );
+
+        var readSlotStatusRequest = new DatabaseRequest<UserData> (
+            requestId: _requestId++,
+            queryType: QueryTypeRecord.Read,
+            resource: ResourceRecord.UserService,
+            data: userListRequestBody
+        );
+
+        byte[] requestJson = JsonSerializer.SerializeToUtf8Bytes(readSlotStatusRequest);
+
+        var response = await AccessDaoSystemAsync<List<StoreData>>(requestJson);
+        if (response == null)
+        {
+            await _syslogClient.SyslogAsync(
+                LogLevel.Error,
+                "Failed to get user list"
+            );
+
+            throw new InvalidOperationException("Failed to get user list");
+        }
+        if (response.IsSuccess)
+        {
+            if (response.Payload == null)
+            {
+                await _syslogClient.SyslogAsync(
+                    LogLevel.Error,
+                    "Failed to get user list: Payload is null"
+                );
+
+                throw new InvalidOperationException("Failed to get user list: Payload is null");
+            }
+
+            var userList = response.Payload
+                .Where(storeData => !string.IsNullOrEmpty(storeData.UserId))
+                .Select(storeData => new UserListData(new List<string> { storeData.UserId! }))
+                .ToList();
+
+            return userList;
+        }
+        else
+        {
+            if (response.Error == null)
+            {
+                await _syslogClient.SyslogAsync(
+                    LogLevel.Error,
+                    "Failed to get user list: Unknown error"
+                );
+
+                throw new InvalidOperationException("Failed to get user list: Unknown error");
+            }
+
+            await _syslogClient.SyslogAsync(
+                LogLevel.Error,
+                $"Failed to get user list: {response.Error.Message}"
+            );
+
+            throw new InvalidOperationException($"Failed to get user list: {response.Error.Message}");
+        }
     }
 
     private async Task<DatabaseResponse<TResponse>?> AccessDaoSystemAsync<TResponse>(byte[] requestJson)

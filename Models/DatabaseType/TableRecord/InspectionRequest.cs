@@ -7,7 +7,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace api_server.Models.TableRecord;
+namespace api_server.Models.DatabaseType.TableRecord;
 
 [JsonConverter(typeof(JsonStringEnumConverter<InspectionRequestStatusRecord>))]
 public enum InspectionRequestStatusRecord
@@ -26,19 +26,12 @@ public enum InspectionRequestStatusRecord
 }
 
 public record InspectionRequestData (
-    [property: JsonPropertyName("request_id")]
+    [property: JsonPropertyName("inspection_id")]
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? RequestId = null,
+    int? InspectionId = null,
 
-    [property: JsonPropertyName("bottom_image_path")]
+    [property: JsonPropertyName("request_status")]
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? BottomImagePath = null,
-
-    [property: JsonPropertyName("feedback")]
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? Feedback = null,
-
-    [property: JsonPropertyName("user_id")]
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? UserId = null
+    InspectionRequestStatusRecord? RequestStatus = null
 );
+
