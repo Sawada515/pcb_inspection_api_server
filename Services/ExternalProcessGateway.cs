@@ -7,10 +7,10 @@ using System.Diagnostics;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 
-using api_server.Models;
 using api_server.Models.Enums;
 using api_server.Services;
 
+using api_server.Models;
 using api_server.Models.DatabaseType;
 using api_server.Models.DatabaseType.TableRecord;
 
@@ -264,15 +264,15 @@ public class ExternalProcessGateway
         );
 
         try {
-                await _syslogClient.SyslogAsync(
-                    LogLevel.Informational,
-                    "request create new User "
-                );
+            await _syslogClient.SyslogAsync(
+                LogLevel.Informational,
+                "request create new User "
+            );
 
-                uuid = await keycloakAccess.CreateUserAsync(
-                    request_data.Username,
-                    request_data.Password
-                );
+            uuid = await keycloakAccess.CreateUserAsync(
+                request_data.Username,
+                request_data.Password
+            );
         }
         catch (InvalidOperationException ex)
         {
