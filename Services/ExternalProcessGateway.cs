@@ -90,8 +90,12 @@ public class ExternalProcessGateway
                 {
                     if (response.Payload == null)
                     {
-                        // require write log
-                        continue; 
+                        await _syslogClient.SyslogAsync(
+                            LogLevel.Error,
+                            "Response payload is null"
+                        );
+
+                        continue;
                     }
                     var slotData = response.Payload.FirstOrDefault();
                     if (slotData == null)
