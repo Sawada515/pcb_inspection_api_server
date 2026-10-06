@@ -162,8 +162,8 @@ public class ExternalProcessGateway
 
     public async Task<string> GetApplicationLog(int lines)
     {
-        string ServiceName = _syslogClient.ServiceName;
-        //string ServiceName = "notediscovery.service";
+        //string ServiceName = _syslogClient.ServiceName;
+        string ServiceName = "notediscovery.service";
 
         var startInfo = new ProcessStartInfo
         {
