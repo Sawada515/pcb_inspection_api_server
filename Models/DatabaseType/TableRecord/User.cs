@@ -14,7 +14,7 @@ public enum UserRoleRecord
 {
     [JsonStringEnumMemberName("admin")]
     Admin,
-    [JsonStringEnumMemberName("user")]
+    [JsonStringEnumMemberName("general")]
     User
 }
 
@@ -44,10 +44,6 @@ public record UserData (
     [property: JsonPropertyName("uuid")]
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     string? UUID = null,
-
-    [property: JsonPropertyName("user_name")]
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? UserName = null,
 
     [property: JsonPropertyName("user_status")]
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

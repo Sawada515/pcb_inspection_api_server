@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 using api_server.Models.Enums;
-using api_server.Services;
 
 using api_server.Models;
 using api_server.Models.DatabaseType;
@@ -287,6 +286,24 @@ public class ExternalProcessGateway
         return uuid;
     }
 
+    public async Task<bool> UploadUserData(string username, string uuid, int col, int row)
+    {
+        UserData userData = new UserData (
+            UserId: username,
+            Role: UserRoleRecord.User,
+            UUID: uuid,
+            UserStatus: UserStatusRecord.Active
+        );
+
+        StoreData storeData = new StoreData (
+            Col: col,
+            Row: row,
+            UserId: username
+        );
+
+        // 途中
+    }
+
     public async Task<bool> DeleteUser(DeleteUserData username)
     {
         var httpClient = new HttpClient();
@@ -301,23 +318,23 @@ public class ExternalProcessGateway
         );
 
         try {
+            await _syslogClient.SyslogAsync(
+                LogLevel.Informational,
+                $"Deleting user with username: {username}"
+            );
+
+            string? uuid = await keycloakAccess.GetUUIDFromUsernameAsync(username.Username);
+            if (string.IsNullOrEmpty(uuid))
+            {
                 await _syslogClient.SyslogAsync(
-                    LogLevel.Informational,
-                    $"Deleting user with username: {username}"
+                    LogLevel.Error,
+                    $"User not found: {username}"
                 );
 
-                string? uuid = await keycloakAccess.GetUUIDFromUsernameAsync(username.Username);
-                if (string.IsNullOrEmpty(uuid))
-                {
-                    await _syslogClient.SyslogAsync(
-                        LogLevel.Error,
-                        $"User not found: {username}"
-                    );
+                return false;
+            }
 
-                    return false;
-                }
-
-                await keycloakAccess.DeleteUserAsync(uuid);
+            await keycloakAccess.DeleteUserAsync(uuid);
         }
         catch (InvalidOperationException ex)
         {
