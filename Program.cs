@@ -25,7 +25,7 @@ string? HOST = app.Configuration.GetValue<string>("AppSettings:Host", "localhost
 int PORT = app.Configuration.GetValue<int>("AppSettings:Port", 50000);
 
 /*
- * @brief   API server endpoint system_status
+ * @brief   機器の接続状態を返す
  */
 app.MapGet("/system_status", async (ExternalProcessGateway gateway) => new
 {
@@ -33,7 +33,7 @@ app.MapGet("/system_status", async (ExternalProcessGateway gateway) => new
 });
 
 /*
- * @brief   API server endpoint system_log
+ * @brief   アプリケーションログを返す
  */
 app.MapGet("/system_log", async (ExternalProcessGateway gateway) =>
 {
@@ -46,24 +46,23 @@ app.MapGet("/system_log", async (ExternalProcessGateway gateway) =>
 });
 
 /*
- * @brief   API server endpoint slot_statu
+ * @brief   基板格納状態を返す
  */
 app.MapGet("/slot_status", async (ExternalProcessGateway gateway) => new
 {
     slot_status = await gateway.GetSlotStatus()
 });
 
-//app.MapPost("/slot_status", ())
 
 /*
- * @brief   API server endpoint inspection_eta
+ * @brief   検査完了予定時刻を返す
  */
 app.MapGet("/inspection_eta", async (ExternalProcessGateway gateway) => new {
     eta = "2026-06-29 11:00:00"
 });
 
 /*
- * @brief   API server endpoint inspection_history
+ * @brief   検査履歴を返す
  */
 app.MapGet("/inspection_history", async (ExternalProcessGateway gateway) => new {
     history = new List<string> {
@@ -77,14 +76,14 @@ app.MapGet("/inspection_history", async (ExternalProcessGateway gateway) => new 
 });
 
 /*
- * @brief   API server endpoint inspection_status
+ * @brief   検査状況を返す
  */
 app.MapGet("/inspection_status", async (ExternalProcessGateway gateway) => new {
     status = "completed"
 });
 
 /*
- * @brief   API server endpoint inspection_request
+ * @brief   検査開始要求を送信する
  */
 app.MapPost("/inspection_request", async (InspectionRequestStringData request, ExternalProcessGateway gateway) => {
     Console.WriteLine("Received inspection request");
@@ -100,14 +99,14 @@ app.MapPost("/inspection_request", async (InspectionRequestStringData request, E
 
 
 /*
- * @brief   API server endpoint user_list
+ * @brief   ユーザの一覧を返す
  */
 app.MapGet("/user_list", async (ExternalProcessGateway gateway) => new {
     user_list = await gateway.GetUserList()
 });
 
 /*
- * @brief   API server endpoint user
+ * @brief   ユーザの作成
  */
 app.MapPost("/create_user", async (CreateUserData user, ExternalProcessGateway gateway) => {
     string? uuid = await gateway.CreateUser(user);
@@ -119,6 +118,9 @@ app.MapPost("/create_user", async (CreateUserData user, ExternalProcessGateway g
     return Results.Ok(new { message = $"User created successfully {uuid}" });
 });
 
+/*
+ * @brief   ユーザの削除
+ */
 app.MapPost("/delete_user", async (DeleteUserData user, ExternalProcessGateway gateway) => {
     bool success = await gateway.DeleteUser(user);
     if (!success)
@@ -129,18 +131,11 @@ app.MapPost("/delete_user", async (DeleteUserData user, ExternalProcessGateway g
     return Results.Ok(new { message = "User deleted successfully" });
 });
 
-/*
- * @brief   API server endpoint inspection_request
- */
-//app.MapPost("/inspection_request", (InspectionRequest request) => {
-//    // 後で
-//    return Results.Ok(new { message = "Inspection request received successfully" });
-//});
 
-app.MapGet("/defect_info", (string? user_id) => {
-    // 後で
-    return Results.Ok(new { message = $"Defect info for user {user_id} retrieved successfully" });
-});
+//app.MapGet("/defect_info", (string? user_id) => {
+//    // 後で
+//    return Results.Ok(new { message = $"Defect info for user {user_id} retrieved successfully" });
+//});
 
 
 app.Run($"http://{HOST}:{PORT}");

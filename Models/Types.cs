@@ -17,7 +17,7 @@ namespace api_server.Models
     public record CreateUserData(string Username, string Password);
     public record DeleteUserData(string Username);
 
-    public record UserListData(List<string> Usernames);
+    public record UserListData(string Username, DateTime CreatedAt, DateTime FinalInspection);
 
     public record InspectionRequestStringData(string RequestString)
     {

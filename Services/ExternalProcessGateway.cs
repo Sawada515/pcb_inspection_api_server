@@ -161,6 +161,8 @@ public class ExternalProcessGateway
 
     public async Task<string> GetApplicationLog(int lines)
     {
+        ///note journalctlをやめてrsyslogを使用する
+
         //string ServiceName = _syslogClient.ServiceName;
         string ServiceName = "notediscovery.service";
 
@@ -286,6 +288,7 @@ public class ExternalProcessGateway
         return uuid;
     }
 
+/*
     public async Task<bool> UploadUserData(string username, string uuid, int col, int row)
     {
         UserData userData = new UserData (
@@ -303,6 +306,7 @@ public class ExternalProcessGateway
 
         // 途中
     }
+    */
 
     public async Task<bool> DeleteUser(DeleteUserData username)
     {
