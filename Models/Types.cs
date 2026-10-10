@@ -2,25 +2,30 @@ using api_server.Models.DatabaseType.TableRecord;
 
 namespace api_server.Models
 {
-    public record IndividualSlotStatusData(string UserName, bool IsStored);
-    public record SlotStatusData(
-        IndividualSlotStatusData Slot0,
-        IndividualSlotStatusData Slot1,
-        IndividualSlotStatusData Slot2,
-        IndividualSlotStatusData Slot3,
-        IndividualSlotStatusData Slot4,
-        IndividualSlotStatusData Slot5,
-        IndividualSlotStatusData Slot6,
-        IndividualSlotStatusData Slot7,
-        IndividualSlotStatusData Slot8
+    // Desktopアプリケーション
+    public record IndividualSlotStatus(string UserName, bool IsStored);
+    public record SlotStatusResponse(
+        IndividualSlotStatus Slot0,
+        IndividualSlotStatus Slot1,
+        IndividualSlotStatus Slot2,
+        IndividualSlotStatus Slot3,
+        IndividualSlotStatus Slot4,
+        IndividualSlotStatus Slot5,
+        IndividualSlotStatus Slot6,
+        IndividualSlotStatus Slot7,
+        IndividualSlotStatus Slot8
     );
-    public record CreateUserData(string Username, string Password);
-    public record DeleteUserData(string Username);
+    public record CreateUserRequest(string Username, string Password);
+    public record DeleteUserRequest(string Username);
 
-    public record UserListData(string Username, DateTime CreatedAt, DateTime FinalInspection);
+    public record UserResponse(string Username, DateTime CreatedAt, DateTime? FinalInspectionAt);
+    public record UserListResponse(List<UserResponse> Users);
 
-    public record InspectionRequestStringData(string RequestString)
+    public record DeviceConnectionStatusResponse(bool IsJetsonConnectedToPlc, bool IsJetsonConnectedToRpi, bool IsPlcConnectedToRobot);
+
+    public record InspectionRequest(string RequestString)
     {
+        // 検査開始要求 string -> enum
         public InspectionRequestStatusRecord ToStatus() => RequestString?.ToLowerInvariant() switch
         {
             "waiting"   => InspectionRequestStatusRecord.Waiting,
@@ -30,6 +35,30 @@ namespace api_server.Models
             _ => throw new ArgumentException($"不正なステータス文字列です: '{RequestString}'")
         };
     };
+
+    public record InspectionStateResponse(string Username, string InspectionState);
+    public record InspectionStateListResponse(List<InspectionStateResponse> Inspectionsituations);
+
+    public record InspectionHistoryResponse(string Username, DateTime InspectionStartedAt, DateTime InspectionFinishedAt);
+    public record InspectionHistoryListResponse(List<InspectionHistoryResponse> InspectionHistories);
+
+    public record InspectionDoorStatusResponse(bool IsDoorOpen);
+
+    // Webアプリケーション
+    public record InspectionResponse(int InspectionId, DateTime InspectionAt, int DefectCount);
+
+    public record InspectionEtaResponse(int EtaMinutes);
+
+    public record InspectionResultRequest(string Username);
+
+    // 必要なデータを聞いてから定義する
+    //public record DefectResponse()
+    //public record InspectionResultResponse()
+
+
+    // ------------------------------------------------------------------------------------------
+    // シングルトン用 オプション
+    // ------------------------------------------------------------------------------------------
 
     public class SyslogClientOptions
     {

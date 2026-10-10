@@ -192,7 +192,7 @@ public class ExternalProcessGateway
         return output;
     }
 
-    public async Task<bool> RequestInspection(InspectionRequestStringData request)
+    public async Task<bool> RequestInspection(InspectionRequest request)
     {
         await _syslogClient.SyslogAsync(
             LogLevel.Informational,
@@ -250,7 +250,7 @@ public class ExternalProcessGateway
         }
     }
 
-    public async Task<string?> CreateUser(CreateUserData request_data)
+    public async Task<string?> CreateUser(CreateUserRequest request)
     {
         var httpClient = new HttpClient();
         string uuid = string.Empty;
@@ -271,8 +271,8 @@ public class ExternalProcessGateway
             );
 
             uuid = await keycloakAccess.CreateUserAsync(
-                request_data.Username,
-                request_data.Password
+                request.Username,
+                request.Password
             );
         }
         catch (InvalidOperationException ex)
@@ -308,7 +308,7 @@ public class ExternalProcessGateway
     }
     */
 
-    public async Task<bool> DeleteUser(DeleteUserData username)
+    public async Task<bool> DeleteUser(DeleteUserRequest request)
     {
         var httpClient = new HttpClient();
 
@@ -324,15 +324,15 @@ public class ExternalProcessGateway
         try {
             await _syslogClient.SyslogAsync(
                 LogLevel.Informational,
-                $"Deleting user with username: {username}"
+                $"Deleting user with username: {request}"
             );
 
-            string? uuid = await keycloakAccess.GetUUIDFromUsernameAsync(username.Username);
+            string? uuid = await keycloakAccess.GetUUIDFromUsernameAsync(request.Username);
             if (string.IsNullOrEmpty(uuid))
             {
                 await _syslogClient.SyslogAsync(
                     LogLevel.Error,
-                    $"User not found: {username}"
+                    $"User not found: {request}"
                 );
 
                 return false;
