@@ -44,14 +44,14 @@ public class ExternalProcessGateway
         _unixDomainSocketClient = unixDomainSocketClient;
     }
 
-    public async Task<SlotStatusData> GetSlotStatus()
+    public async Task<SlotStatusResponse> GetSlotStatus()
     {
         const int SlotRowMax = 3;
         const int SlotColMax = 3;
         const int SlotMaxCount = SlotRowMax * SlotColMax;
 
-        SlotStatusData slotStatus;
-        IndividualSlotStatusData[] individualSlotStatus = new IndividualSlotStatusData[SlotMaxCount];
+        SlotStatusResponse slotStatus;
+        IndividualSlotStatus[] individualSlotStatus = new IndividualSlotStatus[SlotMaxCount];
 
         await _unixDomainSocketClient.ConnectAsync();
 
@@ -123,12 +123,12 @@ public class ExternalProcessGateway
                         userName = slotData.UserId;
                     }
 
-                    individualSlotStatus[(i * SlotRowMax) + j] = new IndividualSlotStatusData(userName, isStored);
+                    individualSlotStatus[(i * SlotRowMax) + j] = new IndividualSlotStatus(userName, isStored);
                 }
             }
         }
 
-        slotStatus = new SlotStatusData(
+        slotStatus = new SlotStatusResponse (
             individualSlotStatus[0],
             individualSlotStatus[1],
             individualSlotStatus[2],
@@ -353,7 +353,7 @@ public class ExternalProcessGateway
         return true;
     }
 
-    public async Task<List<UserListData>> GetUserList()
+    public async Task<List<UseListResponse>> GetUserList()
     {
         var userListRequestBody = new UserData (
             UserStatus: UserStatusRecord.Active
@@ -390,12 +390,14 @@ public class ExternalProcessGateway
                 throw new InvalidOperationException("Failed to get user list: Payload is null");
             }
 
+/*
             var userList = response.Payload
                 .Where(storeData => !string.IsNullOrEmpty(storeData.UserId))
-                .Select(storeData => new UserListData(new List<string> { storeData.UserId! }))
+                .Select(storeData => new UserResponse(new List<string> { storeData.UserId! }))
                 .ToList();
+*/
 
-            return userList;
+//            return userList;
         }
         else
         {
