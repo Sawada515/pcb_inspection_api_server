@@ -212,9 +212,7 @@ public class ExternalProcessGateway
             data: requestInspectionBodyData
         );
 
-        byte[] requestJson = JsonSerializer.SerializeToUtf8Bytes(requestInspectionRequest);
-
-        var response = await AccessDaoSystemAsync<InspectionRequestData>(requestJson);
+        var response = await CreateJsonAndAccessDaoSystemAsync<InspectionRequestData>(requestInspectionRequest);
         if (response == null)
         {
             await _syslogClient.SyslogAsync(
@@ -250,6 +248,7 @@ public class ExternalProcessGateway
         }
     }
 
+    // ユーザを実際に管理するのはKeycloak
     public async Task<string?> CreateUser(CreateUserRequest request)
     {
         var httpClient = new HttpClient();
@@ -288,26 +287,47 @@ public class ExternalProcessGateway
         return uuid;
     }
 
-/*
-    public async Task<bool> UploadUserData(string username, string uuid, int col, int row)
+    // DBにユーザ情報を登録する
+    public async Task<bool> UploadUserData(CreateUserRequest request, string uuid)
     {
         UserData userData = new UserData (
-            UserId: username,
+            UserId: request.Username,
             Role: UserRoleRecord.User,
             UUID: uuid,
             UserStatus: UserStatusRecord.Active
         );
 
         StoreData storeData = new StoreData (
-            Col: col,
-            Row: row,
-            UserId: username
+            Col: request.Col,
+            Row: request.Row,
+            UserId: request.Username
         );
 
-        // 途中
-    }
-    */
+        var responseUser = await CreateJsonAndAccessDaoSystemAsync<UserData>(userData);
+        if (responseUser == null || !responseUser.IsSuccess)
+        {
+            await _syslogClient.SyslogAsync(
+                LogLevel.Error,
+                "Failed to upload user data"
+            );
 
+            return false;
+        }
+
+        var responseStore = await CreateJsonAndAccessDaoSystemAsync<StoreData>(storeData);
+        if (responseStore == null || !responseStore.IsSuccess)
+        {
+            await _syslogClient.SyslogAsync(
+                LogLevel.Error,
+                "Failed to upload store data"
+            );
+            return false;
+        }
+
+        return true;
+    }
+
+    // ここで削除するのはKeycloak上のユーザ
     public async Task<bool> DeleteUser(DeleteUserRequest request)
     {
         var httpClient = new HttpClient();
@@ -353,7 +373,26 @@ public class ExternalProcessGateway
         return true;
     }
 
-    public async Task<List<UseListResponse>> GetUserList()
+    public async Task<bool> DeleteUserData(DeleteUserRequest request)
+    {
+        UserData userData = new UserData (
+            UserId: request.Username
+        );
+
+        var responseUser = await CreateJsonAndAccessDaoSystemAsync<UserData>(userData);
+        if (responseUser == null || !responseUser.IsSuccess)
+        {
+            await _syslogClient.SyslogAsync(
+                LogLevel.Error,
+                "Failed to delete user data"
+            );
+            return false;
+        }
+
+        return true;
+    }
+
+    public async Task<List<UserListResponse>> GetUserList()
     {
         var userListRequestBody = new UserData (
             UserStatus: UserStatusRecord.Active
@@ -418,6 +457,18 @@ public class ExternalProcessGateway
 
             throw new InvalidOperationException($"Failed to get user list: {response.Error.Message}");
         }
+    }
+
+    private async Task<DatabaseResponse<TResponse>> CreateJsonAndAccessDaoSystemAsync(DatabaseRequest request)
+    {
+        if (request == null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        byte[] requestJson = JsonSerializer.SerializeToUtf8Bytes(request);
+
+        return await AccessDaoSystemAsync<TokenResponse>(requestJson);
     }
 
     private async Task<DatabaseResponse<TResponse>?> AccessDaoSystemAsync<TResponse>(byte[] requestJson)

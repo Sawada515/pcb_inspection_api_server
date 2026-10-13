@@ -15,7 +15,7 @@ namespace api_server.Models
         IndividualSlotStatus Slot7,
         IndividualSlotStatus Slot8
     );
-    public record CreateUserRequest(string Username, string Password);
+    public record CreateUserRequest(string Username, string Password, int Col, int Row);
     public record DeleteUserRequest(string Username);
 
     public record UserResponse(string Username, DateTime CreatedAt, DateTime? FinalInspectionAt);
