@@ -109,10 +109,10 @@ app.MapPost("/inspection_request", async (InspectionRequest request, ExternalPro
 /*
  * @brief   ユーザの一覧を返す
  */
-//app.MapGet("/user_list", async (ExternalProcessGateway gateway) => new
-//{
-//    user_list = await gateway.GetUserList()
-//});
+app.MapGet("/user_list", async (ExternalProcessGateway gateway) => new
+{
+    user_list = await gateway.GetUserList()
+});
 
 /*
  * @brief   ユーザの作成
@@ -128,6 +128,10 @@ app.MapPost("/create_user", async (CreateUserRequest request, ExternalProcessGat
     }
 
     bool ret = await gateway.UploadUserData(request, uuid);
+    if (!ret)
+    {
+        return Results.BadRequest(new { message = "Failed to upload user data" });
+    }
 
     return Results.Ok(new { message = $"User created successfully {uuid}" });
 });

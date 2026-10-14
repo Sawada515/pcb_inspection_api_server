@@ -30,8 +30,9 @@ public class ExternalProcessGateway
     /**
      * @brief リクエストIDのカウンタ
      * @note 使用したらインクリメント 
+     * @warn 言語仕様として0で初期化済み
      */
-    private int _requestId= 0;
+    private int _requestId;
 
     public ExternalProcessGateway(IOptions<KeycloakOptions> options, SyslogClient syslogClient, UnixDomainSocketClient unixDomainSocketClient)
     {
@@ -110,7 +111,7 @@ public class ExternalProcessGateway
                     }
 
                     bool isStored = false;
-                    string? userName = string.Empty;
+                    string? userName;
 
                     if (slotData.StoreStatus.HasValue)
                     {
@@ -119,6 +120,7 @@ public class ExternalProcessGateway
                             isStored = true;
                         }
                     }
+
                     if (slotData.UserId == null)
                     {
                         userName = string.Empty;
@@ -418,72 +420,30 @@ public class ExternalProcessGateway
         return true;
     }
 
-    /*}
-    public async Task<List<UserListResponse>> GetUserList()
+    public async Task<UserListResponse?> GetUserList()
     {
-        var userListRequestBody = new UserData (
-            UserStatus: UserStatusRecord.Active
-        );
+        var dummyData = new List<UserResponse>();
 
-        var readSlotStatusRequest = new DatabaseRequest<UserData> (
+        var userListRequest = new DatabaseRequest<List<UserResponse>>(
             requestId: _requestId++,
-            queryType: QueryTypeRecord.Read,
-            resource: ResourceRecord.UserService,
-            data: userListRequestBody
+            queryType: QueryTypeRecord.UserList,
+            resource: ResourceRecord.ComplexService,
+            data: dummyData
         );
 
-        byte[] requestJson = JsonSerializer.SerializeToUtf8Bytes(readSlotStatusRequest);
-
-        var response = await AccessDaoSystemAsync<List<StoreData>>(requestJson);
-        if (response == null)
+        var response = await CreateJsonAndAccessDaoSystemAsync<List<UserResponse>>(userListRequest);
+        if (response == null || !response.IsSuccess || response.Payload == null)
         {
             await _syslogClient.SyslogAsync(
                 LogLevel.Error,
                 "Failed to get user list"
             );
 
-            throw new InvalidOperationException("Failed to get user list");
+            return null;
         }
-        if (response.IsSuccess)
-        {
-            if (response.Payload == null)
-            {
-                await _syslogClient.SyslogAsync(
-                    LogLevel.Error,
-                    "Failed to get user list: Payload is null"
-                );
 
-                throw new InvalidOperationException("Failed to get user list: Payload is null");
-            }
-
-            var userList = response.Payload
-                .Where(storeData => !string.IsNullOrEmpty(storeData.UserId))
-                .Select(storeData => new UserResponse(new List<string> { storeData.UserId! }))
-                .ToList();
-
-            return userList;
-        }
-        else
-        {
-            if (response.Error == null)
-            {
-                await _syslogClient.SyslogAsync(
-                    LogLevel.Error,
-                    "Failed to get user list: Unknown error"
-                );
-
-                throw new InvalidOperationException("Failed to get user list: Unknown error");
-            }
-
-            await _syslogClient.SyslogAsync(
-                LogLevel.Error,
-                $"Failed to get user list: {response.Error.Message}"
-            );
-
-            throw new InvalidOperationException($"Failed to get user list: {response.Error.Message}");
-        }
+        return new UserListResponse(response.Payload);
     }
-*/
 
     private async Task<DatabaseResponse<TResponse>> CreateJsonAndAccessDaoSystemAsync<TResponse>(DatabaseRequest<TResponse> request)
     {

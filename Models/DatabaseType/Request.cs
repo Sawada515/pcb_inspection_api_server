@@ -19,7 +19,10 @@ public enum QueryTypeRecord
     [JsonStringEnumMemberName("update")]
     Update,
     [JsonStringEnumMemberName("delete")]
-    Delete
+    Delete,
+
+    [JsonStringEnumMemberName("get_user_list")]
+    UserList
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter<ResourceRecord>))]
@@ -38,7 +41,9 @@ public enum ResourceRecord
     [JsonStringEnumMemberName("defect_type_service")]
     DefectTypeService,
     [JsonStringEnumMemberName("image_service")]
-    ImageService
+    ImageService,
+    [JsonStringEnumMemberName("complex_service")]
+    ComplexService
 }
 
 public record DatabasePayload<TData>
