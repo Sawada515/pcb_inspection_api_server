@@ -12,7 +12,7 @@
 using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
 
-namespace api_server.Services;
+namespace ApiServer.Services;
 
 public class TokenResponse
 {

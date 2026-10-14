@@ -9,20 +9,20 @@ using System.Diagnostics;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 
-using api_server.Models.Enums;
+using ApiServer.Models.Enums;
 
-using api_server.Models;
-using api_server.Models.DatabaseType;
-using api_server.Models.DatabaseType.TableRecord;
+using ApiServer.Models;
+using ApiServer.Models.DatabaseType;
+using ApiServer.Models.DatabaseType.TableRecord;
 
-namespace api_server.Services;
+namespace ApiServer.Services;
 
 public class ExternalProcessGateway
 {
-    readonly string _baseUrl;
-    readonly string _realm;
-    readonly string _clientId;
-    readonly string _clientSecret;
+    private readonly string _baseUrl;
+    private readonly string _realm;
+    private readonly string _clientId;
+    private readonly string _clientSecret;
 
     private readonly SyslogClient _syslogClient;
     private readonly UnixDomainSocketClient _unixDomainSocketClient;
@@ -31,11 +31,11 @@ public class ExternalProcessGateway
      * @brief リクエストIDのカウンタ
      * @note 使用したらインクリメント 
      */
-    private int _requestId = 0;
+    private int _requestId= 0;
 
     public ExternalProcessGateway(IOptions<KeycloakOptions> options, SyslogClient syslogClient, UnixDomainSocketClient unixDomainSocketClient)
     {
-        var keycloakOptions = options.Value;
+        KeycloakOptions keycloakOptions = options.Value;
 
         _baseUrl = keycloakOptions.BaseUrl;
         _realm = keycloakOptions.Realm;

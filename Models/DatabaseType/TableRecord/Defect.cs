@@ -7,7 +7,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace api_server.Models.DatabaseType.TableRecord;
+namespace ApiServer.Models.DatabaseType.TableRecord;
 
 [JsonConverter(typeof(JsonStringEnumConverter<BoardSideRecord>))]
 public enum BoardSideRecord

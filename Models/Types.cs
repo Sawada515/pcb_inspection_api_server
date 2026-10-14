@@ -7,9 +7,9 @@
 
 using System.Text.Json.Serialization;
 
-using api_server.Models.DatabaseType.TableRecord;
+using ApiServer.Models.DatabaseType.TableRecord;
 
-namespace api_server.Models
+namespace ApiServer.Models
 {
     // Desktopアプリケーション
     public record IndividualSlotStatus(
@@ -153,7 +153,7 @@ namespace api_server.Models
     {
         public string Host { get; set; } = "localhost";
         public int Port { get; set; } = 514;
-        public string ServiceName { get; set; } = "api_server";
+        public string ServiceName { get; set; } = "ApiServer";
     }
 
     public class KeycloakOptions

@@ -5,7 +5,7 @@
  * @date    2026-09-01
  */
 
-namespace api_server.Models.Enums
+namespace ApiServer.Models.Enums
 {
     public enum SystemStatus
     {

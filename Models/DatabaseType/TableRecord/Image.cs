@@ -7,7 +7,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace api_server.Models.DatabaseType.TableRecord;
+namespace ApiServer.Models.DatabaseType.TableRecord;
 
 public record ImageData (
     [property: JsonPropertyName("image_id")]

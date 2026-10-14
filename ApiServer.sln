@@ -1,8 +1,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.5.2.0
+# Visual Studio Version 18
+VisualStudioVersion = 18.11.12306.390 stable
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api_server", "api_server.csproj", "{C25D6270-BE07-69CD-0D98-E2A0163BE400}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiServer", "ApiServer.csproj", "{C25D6270-BE07-69CD-0D98-E2A0163BE400}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

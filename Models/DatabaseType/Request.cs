@@ -7,7 +7,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace api_server.Models.DatabaseType;
+namespace ApiServer.Models.DatabaseType;
 
 [JsonConverter(typeof(JsonStringEnumConverter<QueryTypeRecord>))]
 public enum QueryTypeRecord

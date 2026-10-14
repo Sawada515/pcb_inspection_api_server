@@ -7,7 +7,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace api_server.Models.DatabaseType;
+namespace ApiServer.Models.DatabaseType;
 
 [JsonConverter(typeof(JsonStringEnumConverter<ResponseStatus>))]
 public enum ResponseStatus
@@ -41,5 +41,5 @@ public record DatabaseResponse<TPayload> (
     DatabaseError? Error = null
 )
 {
-    public bool IsSuccess => Status == ResponseStatus.Success && Payload != null;
+    public bool IsSuccess => Status == ResponseStatus.Success && Error == null;
 }

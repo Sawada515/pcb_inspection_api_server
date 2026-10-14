@@ -9,8 +9,7 @@ using System.Buffers.Binary;
 using System.Net.Sockets;
 using Microsoft.Extensions.Options;
 
-using api_server.Models;
-
+using ApiServer.Models;
 public class UnixDomainSocketClient : IDisposable
 {
     private readonly string _socketPath;
@@ -19,7 +18,7 @@ public class UnixDomainSocketClient : IDisposable
 
     private readonly SemaphoreSlim _sendLock = new(1, 1);
     private readonly SemaphoreSlim _recvLock = new(1, 1);
-    private bool _disposed = false;
+    private bool _disposed;
     private const int MaxPayloadSize = 2 * 1024; // 2kB
     private const int MAX_RETRY_COUNT = 5;
     private const int RECV_HEADER_SIZE = 8;
@@ -53,7 +52,7 @@ public class UnixDomainSocketClient : IDisposable
             CleanUp();
 
             _socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
-            var endpoint = new UnixDomainSocketEndPoint(_socketPath);
+            UnixDomainSocketEndPoint endpoint = new UnixDomainSocketEndPoint(_socketPath);
 
             await _socket.ConnectAsync(endpoint, cancellationToken);
             _stream = new NetworkStream(_socket, ownsSocket: true);

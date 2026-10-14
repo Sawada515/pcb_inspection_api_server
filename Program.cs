@@ -5,21 +5,25 @@
  * @date    2026-06-29
  */
 
-using api_server.Services;
-using api_server.Models;
+//using Microsoft.AspNetCore.Builder;
+//using Microsoft.Extensions.DependencyInjection;
+//using Microsoft.Extensions.Configuration;
 
-var builder = WebApplication.CreateBuilder(args);
+using ApiServer.Services;
+using ApiServer.Models;
+
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<SyslogClientOptions>(builder.Configuration.GetSection("SyslogClient"));
 builder.Services.AddSingleton<SyslogClient>();
 
-builder.Services.Configure<KeycloakOptions>(builder.Configuration.GetSection("Keycloak"));
+builder.Services.Configure<KeycloakOptions>(builder.Configuration.GetSection("KeycloakClient"));
 builder.Services.AddSingleton<ExternalProcessGateway>();
 
 builder.Services.Configure<UnixDomainSocketClientOptions>(builder.Configuration.GetSection("UnixDomainSocketClient"));
 builder.Services.AddSingleton<UnixDomainSocketClient>();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 string? HOST = app.Configuration.GetValue<string>("AppSettings:Host", "localhost");
 int PORT = app.Configuration.GetValue<int>("AppSettings:Port", 50000);
@@ -57,14 +61,16 @@ app.MapGet("/slot_status", async (ExternalProcessGateway gateway) => new
 /*
  * @brief   検査完了予定時刻を返す
  */
-app.MapGet("/inspection_eta", async (ExternalProcessGateway gateway) => new {
+app.MapGet("/inspection_eta", async (ExternalProcessGateway gateway) => new
+{
     eta = "2026-06-29 11:00:00"
 });
 
 /*
  * @brief   検査履歴を返す
  */
-app.MapGet("/inspection_history", async (ExternalProcessGateway gateway) => new {
+app.MapGet("/inspection_history", async (ExternalProcessGateway gateway) => new
+{
     history = new List<string> {
         "2026-06-29 10:00:00 - Inspection started",
         "2026-06-29 10:05:00 - Inspection completed",
@@ -78,14 +84,16 @@ app.MapGet("/inspection_history", async (ExternalProcessGateway gateway) => new 
 /*
  * @brief   検査状況を返す
  */
-app.MapGet("/inspection_status", async (ExternalProcessGateway gateway) => new {
+app.MapGet("/inspection_status", async (ExternalProcessGateway gateway) => new
+{
     status = "completed"
 });
 
 /*
  * @brief   検査開始要求を送信する
  */
-app.MapPost("/inspection_request", async (InspectionRequest request, ExternalProcessGateway gateway) => {
+app.MapPost("/inspection_request", async (InspectionRequest request, ExternalProcessGateway gateway) =>
+{
     Console.WriteLine("Received inspection request");
 
     bool success = await gateway.RequestInspection(request);
@@ -101,14 +109,16 @@ app.MapPost("/inspection_request", async (InspectionRequest request, ExternalPro
 /*
  * @brief   ユーザの一覧を返す
  */
-//app.MapGet("/user_list", async (ExternalProcessGateway gateway) => new {
+//app.MapGet("/user_list", async (ExternalProcessGateway gateway) => new
+//{
 //    user_list = await gateway.GetUserList()
 //});
 
 /*
  * @brief   ユーザの作成
  */
-app.MapPost("/create_user", async (CreateUserRequest request, ExternalProcessGateway gateway) => {
+app.MapPost("/create_user", async (CreateUserRequest request, ExternalProcessGateway gateway) =>
+{
     string? uuid = null;
 
     uuid = await gateway.CreateUser(request);
@@ -125,18 +135,26 @@ app.MapPost("/create_user", async (CreateUserRequest request, ExternalProcessGat
 /*
  * @brief   ユーザの削除
  */
-app.MapPost("/delete_user", async (DeleteUserRequest request, ExternalProcessGateway gateway) => {
+app.MapPost("/delete_user", async (DeleteUserRequest request, ExternalProcessGateway gateway) =>
+{
     bool success = await gateway.DeleteUser(request);
     if (!success)
     {
         return Results.BadRequest(new { message = "Failed to delete user" });
     }
 
+    success = await gateway.DeleteUserData(request);
+    if (!success)
+    {
+        return Results.BadRequest(new { message = "Failed to delete user data" });
+    }
+
     return Results.Ok(new { message = "User deleted successfully" });
 });
 
 
-//app.MapGet("/defect_info", (string? user_id) => {
+//app.MapGet("/defect_info", (string? user_id) =>
+//{
 //    // 後で
 //    return Results.Ok(new { message = $"Defect info for user {user_id} retrieved successfully" });
 //});
