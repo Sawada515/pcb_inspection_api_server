@@ -85,7 +85,7 @@ app.MapGet("/inspection_status", async (ExternalProcessGateway gateway) => new {
 /*
  * @brief   検査開始要求を送信する
  */
-app.MapPost("/inspection_request", async (InspectionRequestStringData request, ExternalProcessGateway gateway) => {
+app.MapPost("/inspection_request", async (InspectionRequest request, ExternalProcessGateway gateway) => {
     Console.WriteLine("Received inspection request");
 
     bool success = await gateway.RequestInspection(request);
@@ -101,19 +101,23 @@ app.MapPost("/inspection_request", async (InspectionRequestStringData request, E
 /*
  * @brief   ユーザの一覧を返す
  */
-app.MapGet("/user_list", async (ExternalProcessGateway gateway) => new {
-    user_list = await gateway.GetUserList()
-});
+//app.MapGet("/user_list", async (ExternalProcessGateway gateway) => new {
+//    user_list = await gateway.GetUserList()
+//});
 
 /*
  * @brief   ユーザの作成
  */
-app.MapPost("/create_user", async (CreateUserData user, ExternalProcessGateway gateway) => {
-    string? uuid = await gateway.CreateUser(user);
+app.MapPost("/create_user", async (CreateUserRequest request, ExternalProcessGateway gateway) => {
+    string? uuid = null;
+
+    uuid = await gateway.CreateUser(request);
     if (uuid == null)
     {
         return Results.BadRequest(new { message = "Failed to create user" });
     }
+
+    bool ret = await gateway.UploadUserData(request, uuid);
 
     return Results.Ok(new { message = $"User created successfully {uuid}" });
 });
@@ -121,8 +125,8 @@ app.MapPost("/create_user", async (CreateUserData user, ExternalProcessGateway g
 /*
  * @brief   ユーザの削除
  */
-app.MapPost("/delete_user", async (DeleteUserData user, ExternalProcessGateway gateway) => {
-    bool success = await gateway.DeleteUser(user);
+app.MapPost("/delete_user", async (DeleteUserRequest request, ExternalProcessGateway gateway) => {
+    bool success = await gateway.DeleteUser(request);
     if (!success)
     {
         return Results.BadRequest(new { message = "Failed to delete user" });

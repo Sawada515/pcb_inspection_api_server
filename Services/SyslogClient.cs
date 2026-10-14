@@ -83,7 +83,7 @@ public class SyslogClient : IDisposable
 
         _host = syslogOptions.Host;
         _port = syslogOptions.Port;
-        _serviceName = syslogOptions.serviceName;
+        _serviceName = syslogOptions.ServiceName;
 
         OpenLog();
     }

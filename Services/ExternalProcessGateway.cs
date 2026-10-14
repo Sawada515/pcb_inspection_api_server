@@ -1,6 +1,8 @@
 /**
- *  @file Services/ExternalProcessGateway.cs
- *  @brief ExternalProcessGateway class for managing external processes
+ * @file ExternalProcessGateway.cs
+ * @brief 外部プロセスとの通信を行うゲートウェイクラス
+ * @note Unixドメインソケットを使用して外部プロセスと通信する
+ * @author Sawada
  */
 
 using System.Diagnostics;
@@ -58,15 +60,15 @@ public class ExternalProcessGateway
         // slotの個数分問い合わせ
         for (int i = 0; i < SlotColMax; ++i)
         {
-            for (int j = 0; j < SlotRowMax; ++j)    
+            for (int j = 0; j < SlotRowMax; ++j)
             {
-                var slotStatusReadBodyData = new StoreData (
+                var slotStatusReadBodyData = new StoreData(
                     //Col: i,
                     //Row: j
                     StoreId: (i * SlotRowMax) + j
                 );
 
-                var readSlotStatusRequest = new DatabaseRequest<StoreData> (
+                var readSlotStatusRequest = new DatabaseRequest<StoreData>(
                     requestId: _requestId++,
                     queryType: QueryTypeRecord.Read,
                     resource: ResourceRecord.StoreService,
@@ -99,8 +101,11 @@ public class ExternalProcessGateway
                     var slotData = response.Payload.FirstOrDefault();
                     if (slotData == null)
                     {
-                        // require write log 
-                    
+                        await _syslogClient.SyslogAsync(
+                            LogLevel.Error,
+                            "Slot data is null"
+                        );
+
                         continue;
                     }
 
@@ -111,7 +116,7 @@ public class ExternalProcessGateway
                     {
                         if (slotData.StoreStatus.Value != StoreStatusRecord.Empty)
                         {
-                            isStored = true;        
+                            isStored = true;
                         }
                     }
                     if (slotData.UserId == null)
@@ -128,7 +133,7 @@ public class ExternalProcessGateway
             }
         }
 
-        slotStatus = new SlotStatusResponse (
+        slotStatus = new SlotStatusResponse(
             individualSlotStatus[0],
             individualSlotStatus[1],
             individualSlotStatus[2],
@@ -161,7 +166,7 @@ public class ExternalProcessGateway
 
     public async Task<string> GetApplicationLog(int lines)
     {
-        ///note journalctlをやめてrsyslogを使用する
+        ///note journalctlをやめてrsyslogを使用するかも
 
         //string ServiceName = _syslogClient.ServiceName;
         string ServiceName = "notediscovery.service";
@@ -172,7 +177,7 @@ public class ExternalProcessGateway
             Arguments = $"-eu {ServiceName} -n {lines} --no-pager",
             RedirectStandardOutput = true,
             UseShellExecute = false,
-            CreateNoWindow = true       
+            CreateNoWindow = true
         };
 
         using var process = Process.Start(startInfo);
@@ -201,11 +206,11 @@ public class ExternalProcessGateway
 
         var status = request.ToStatus();
 
-        var requestInspectionBodyData = new InspectionRequestData (
+        var requestInspectionBodyData = new InspectionRequestData(
             RequestStatus: status
         );
 
-        var requestInspectionRequest = new DatabaseRequest<InspectionRequestData> (
+        var requestInspectionRequest = new DatabaseRequest<InspectionRequestData>(
             requestId: _requestId++,
             queryType: QueryTypeRecord.Create,
             resource: ResourceRecord.InspectionRequestService,
@@ -218,7 +223,7 @@ public class ExternalProcessGateway
             await _syslogClient.SyslogAsync(
                 LogLevel.Error,
                 "Failed to request inspection"
-            ); 
+            );
 
             return false;
         }
@@ -290,20 +295,27 @@ public class ExternalProcessGateway
     // DBにユーザ情報を登録する
     public async Task<bool> UploadUserData(CreateUserRequest request, string uuid)
     {
-        UserData userData = new UserData (
+        UserData userData = new UserData(
             UserId: request.Username,
             Role: UserRoleRecord.User,
             UUID: uuid,
             UserStatus: UserStatusRecord.Active
         );
 
-        StoreData storeData = new StoreData (
+        StoreData storeData = new StoreData(
             Col: request.Col,
             Row: request.Row,
             UserId: request.Username
         );
 
-        var responseUser = await CreateJsonAndAccessDaoSystemAsync<UserData>(userData);
+        var userDataCreateRequest = new DatabaseRequest<UserData>(
+            requestId: _requestId++,
+            queryType: QueryTypeRecord.Create,
+            resource: ResourceRecord.UserService,
+            data: userData
+        );
+
+        var responseUser = await CreateJsonAndAccessDaoSystemAsync<UserData>(userDataCreateRequest);
         if (responseUser == null || !responseUser.IsSuccess)
         {
             await _syslogClient.SyslogAsync(
@@ -314,7 +326,14 @@ public class ExternalProcessGateway
             return false;
         }
 
-        var responseStore = await CreateJsonAndAccessDaoSystemAsync<StoreData>(storeData);
+        var storeDataUpdateRequest = new DatabaseRequest<StoreData>(
+            requestId: _requestId++,
+            queryType: QueryTypeRecord.Update,
+            resource: ResourceRecord.StoreService,
+            data: storeData
+        );
+
+        var responseStore = await CreateJsonAndAccessDaoSystemAsync<StoreData>(storeDataUpdateRequest);
         if (responseStore == null || !responseStore.IsSuccess)
         {
             await _syslogClient.SyslogAsync(
@@ -375,11 +394,18 @@ public class ExternalProcessGateway
 
     public async Task<bool> DeleteUserData(DeleteUserRequest request)
     {
-        UserData userData = new UserData (
+        UserData userData = new UserData(
             UserId: request.Username
         );
 
-        var responseUser = await CreateJsonAndAccessDaoSystemAsync<UserData>(userData);
+        var userDeleteRequest = new DatabaseRequest<UserData>(
+            requestId: _requestId++,
+            queryType: QueryTypeRecord.Delete,
+            resource: ResourceRecord.UserService,
+            data: userData
+        );
+
+        var responseUser = await CreateJsonAndAccessDaoSystemAsync<UserData>(userDeleteRequest);
         if (responseUser == null || !responseUser.IsSuccess)
         {
             await _syslogClient.SyslogAsync(
@@ -392,6 +418,7 @@ public class ExternalProcessGateway
         return true;
     }
 
+    /*}
     public async Task<List<UserListResponse>> GetUserList()
     {
         var userListRequestBody = new UserData (
@@ -429,14 +456,12 @@ public class ExternalProcessGateway
                 throw new InvalidOperationException("Failed to get user list: Payload is null");
             }
 
-/*
             var userList = response.Payload
                 .Where(storeData => !string.IsNullOrEmpty(storeData.UserId))
                 .Select(storeData => new UserResponse(new List<string> { storeData.UserId! }))
                 .ToList();
-*/
 
-//            return userList;
+            return userList;
         }
         else
         {
@@ -458,8 +483,9 @@ public class ExternalProcessGateway
             throw new InvalidOperationException($"Failed to get user list: {response.Error.Message}");
         }
     }
+*/
 
-    private async Task<DatabaseResponse<TResponse>> CreateJsonAndAccessDaoSystemAsync(DatabaseRequest request)
+    private async Task<DatabaseResponse<TResponse>> CreateJsonAndAccessDaoSystemAsync<TResponse>(DatabaseRequest<TResponse> request)
     {
         if (request == null)
         {
@@ -468,7 +494,7 @@ public class ExternalProcessGateway
 
         byte[] requestJson = JsonSerializer.SerializeToUtf8Bytes(request);
 
-        return await AccessDaoSystemAsync<TokenResponse>(requestJson);
+        return await AccessDaoSystemAsync<TResponse>(requestJson);
     }
 
     private async Task<DatabaseResponse<TResponse>?> AccessDaoSystemAsync<TResponse>(byte[] requestJson)
