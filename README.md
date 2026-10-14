@@ -2,6 +2,12 @@
 ## [must]
 ・エラーハンドリグ・例外が不十分
 
+## 進捗
+slot_status: OK
+create_user: OK
+delete_user: OK
+user_list: OK
+
 ## curlコマンド　メモ
 ### create_user <= OK
 curl -X POST -H "Content-Type: application/json" -d \
