@@ -135,3 +135,5 @@ _NCrunch*
 appsettings.Development.json
 appsettings.json
 .vs/
+/appsettings.Development.json
+/appsettings.json
