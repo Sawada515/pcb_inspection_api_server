@@ -25,7 +25,7 @@ public class ExternalProcessGateway
     private readonly string _clientSecret;
 
     private readonly SyslogClient _syslogClient;
-    private readonly UnixDomainSocketClient _unixDomainSocketClient;
+    private readonly UnixDomainSocketClient _databaseSocket;
 
     /**
      * @brief リクエストIDのカウンタ
@@ -43,8 +43,11 @@ public class ExternalProcessGateway
         _clientId = keycloakOptions.ClientId;
         _clientSecret = keycloakOptions.ClientSecret;
 
+        Console.WriteLine($"client_secret: {_clientSecret}");
+        Console.Out.Flush();
+
         _syslogClient = syslogClient;
-        _unixDomainSocketClient = unixDomainSocketClient;
+        _databaseSocket = unixDomainSocketClient;
     }
 
     public async Task<SlotStatusResponse> GetSlotStatus()
@@ -56,7 +59,7 @@ public class ExternalProcessGateway
         SlotStatusResponse slotStatus;
         IndividualSlotStatus[] individualSlotStatus = new IndividualSlotStatus[SlotMaxCount];
 
-        await _unixDomainSocketClient.ConnectAsync();
+        await _databaseSocket.ConnectAsync();
 
         // slotの個数分問い合わせ
         for (int i = 0; i < SlotColMax; ++i)
@@ -459,13 +462,13 @@ public class ExternalProcessGateway
 
     private async Task<DatabaseResponse<TResponse>?> AccessDaoSystemAsync<TResponse>(byte[] requestJson)
     {
-        await _unixDomainSocketClient.ConnectAsync();
+        await _databaseSocket.ConnectAsync();
 
-        await _unixDomainSocketClient.SendFrameAsync(requestJson);
+        await _databaseSocket.SendFrameAsync(requestJson);
 
         byte[]? responseBytes;
         int itemCount;
-        (responseBytes, itemCount) = await _unixDomainSocketClient.RecvFrameAsync();
+        (responseBytes, itemCount) = await _databaseSocket.RecvFrameAsync();
         if (responseBytes == null)
         {
             return null;

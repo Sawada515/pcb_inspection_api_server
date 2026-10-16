@@ -60,6 +60,9 @@ public class KeycloakAccess
         _realm = realm;
         _clientId = clientId;
         _clientSecret = clientSecret;
+
+        Console.WriteLine($"client_secret: {_clientSecret}");
+        Console.Out.Flush();
     }
 
     /**
@@ -191,12 +194,12 @@ public class KeycloakAccess
 
     public async Task<string?> GetUUIDFromUsernameAsync(string username, CancellationToken cancellationToken = default)
     {
-        var token = GetAccessTokenAsync(cancellationToken);
+        var token = await GetAccessTokenAsync(cancellationToken);
         var endpoint = $"{_baseUrl}/admin/realms/{_realm}/users?username={Uri.EscapeDataString(username)}&exact=true";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, endpoint)
         {
-            Headers = { Authorization = new AuthenticationHeaderValue("Bearer", token.Result) }
+            Headers = { Authorization = new AuthenticationHeaderValue("Bearer", token) }
         };
 
         var response = await _httpClient.SendAsync(request, cancellationToken);
